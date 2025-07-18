@@ -16,8 +16,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 ENV UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=never \
-    UV_PYTHON=python3.13 \
-    UV_PROJECT_ENVIRONMENT=/usr/local
+    UV_PYTHON=python3.13
 
 # Copy dependency files
 COPY uv.lock pyproject.toml ./
@@ -31,7 +30,11 @@ COPY . .
 # Sync the project (install the project itself)
 RUN uv sync --frozen
 
-# Create non-root user
+# Set up virtual environment path
+ENV VIRTUAL_ENV=/app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Create non-root user and set ownership
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
@@ -39,4 +42,4 @@ USER appuser
 EXPOSE 8000
 
 # Run the application
-CMD ["uv", "run", "hypercorn", "main:app", "--bind", "[::]:8000", "--bind", "0.0.0.0:8000"]
+CMD ["hypercorn", "main:app", "--bind", "[::]:8000", "--bind", "0.0.0.0:8000"]
