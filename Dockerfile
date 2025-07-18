@@ -42,4 +42,4 @@ USER appuser
 EXPOSE 8000
 
 # Run the application
-CMD ["uv", "run", "hypercorn", "main:app", "--bind", "[::]:8000"]
+CMD ["sh", "-c", "uv run hypercorn main:app --bind [::]:${PORT:-8000} --bind 0.0.0.0:${PORT:-8000}"]
