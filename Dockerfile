@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.4
 FROM python:3.11-slim
 
 # Set working directory
@@ -18,16 +19,19 @@ ENV UV_LINK_MODE=copy \
     UV_PYTHON=python3.11 \
     UV_PROJECT_ENVIRONMENT=/app
 
-# First stage: Install dependencies only (cached until lockfile changes)
-RUN --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+# Copy dependency files
+COPY uv.lock pyproject.toml ./
+
+# Install dependencies with cache mount
+RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-project
 
 # Copy application code
 COPY . .
 
-# Second stage: Sync the project
-RUN uv sync --frozen
+# Sync the project (install the project itself)
+RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv \
+    uv sync --frozen
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
