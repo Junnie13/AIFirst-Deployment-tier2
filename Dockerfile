@@ -22,16 +22,14 @@ ENV UV_LINK_MODE=copy \
 # Copy dependency files
 COPY uv.lock pyproject.toml ./
 
-# Install dependencies with cache mount
-RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv \
-    uv sync --frozen --no-install-project
+# Install dependencies
+RUN uv sync --frozen --no-install-project
 
 # Copy application code
 COPY . .
 
 # Sync the project (install the project itself)
-RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv \
-    uv sync --frozen
+RUN uv sync --frozen
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
